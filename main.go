@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Produk struct {
@@ -98,6 +99,16 @@ func deleteProdukByID(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Produk Belum Ada", http.StatusBadRequest)
 }
 
+func sendEmail(to string, subject string, body string) error {
+	fmt.Printf("[GOROUTINE STARTED] Sending email to: %s\nSubject: %s\nBody: %s\n", to, subject, body)
+
+	// Simulate email sending delay
+	time.Sleep(2 * time.Second)
+
+	fmt.Printf("[GOROUTINE COMPLETED] Email sent to: %s\n", to)
+	return nil
+}
+
 func main() {
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -140,6 +151,10 @@ func main() {
 			produkBaru.ID = len(produk) + 1
 			produk = append(produk, produkBaru)
 
+			//kirim notif jika sudah tambah produk dengan goroutine
+			fmt.Printf("[MAIN] Starting goroutine to send email for product: %s\n", produkBaru.Nama)
+			go sendEmail("user@gmail.com", "Sukses tambah produk baru "+produkBaru.Nama, "Kamu sukses menambah produk")
+
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusCreated) //201
 
@@ -149,7 +164,7 @@ func main() {
 	})
 
 	fmt.Println("Server is listening on port 8080...")
-	err := http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe("127.0.0.1:8080", nil)
 	if err != nil {
 		fmt.Println("Error starting server:", err)
 	}
